@@ -1,0 +1,55 @@
+body {
+	font-family: Tahoma, sans-serif;
+	margin: 0;
+}
+
+h1 {
+	font-size:  50px;
+	color: white;
+	background-color: #404040C0;
+	margin: auto;
+	border-radius: 20px;
+	width: 400px;
+	text-align: center;
+	margin-top: 30px;
+	padding: 5px;
+}
+
+h2 {
+	text-align: center;
+}
+
+.wallet-connect {
+	margin: auto;
+	width: 100px;
+}
+
+.bgimage {
+	background-image: url(assets/sea.png);
+	background-size: cover;
+	overflow: hidden;
+	width: 100vw;
+	height: 100vh;
+}
+
+.info {
+	background-color: #404040C0;
+	width: 500px;
+	border-radius: 20px;
+	color: white;
+	padding: 5px;
+	margin: 20px auto;
+}
+
+.balance {
+	text-align: center;
+}
+
+.no-tokens {
+	text-align: center;
+}
+
+hr {
+	border: black solid;
+	width: 50%;
+}
