@@ -1,6 +1,9 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { ethers } from 'ethers';
 import sea from '../assets/sea.png';
+
+import {useWeb3React} from '@web3-react/core';
+import {injected} from 'InjectedConnector';
 
 import seaTokenAddress from '../contracts/seatoken-address.json';
 import seaTokenContract from '../contracts/Seatoken.json';
@@ -18,7 +21,244 @@ import { NoTokensMessage } from "./NoTokensMessage";
 const HARDHAT_NETWORK_ID = '31337';
 const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
 
-export class Dapp extends React.Component {
+export function Dapp() {
+
+  const[currentAccount, setCurrentAccount] = useState('');
+  // connect wallet, wallet connected, wrong network
+  const [walletStatus, setWalletStatus] = useState('Connect wallet');
+  const [balance, setBalance] = useState('');
+  const [amount, setAmount] = useState();
+  const [receiver, setReceiver] = useState();
+  const [events, setEvents] = useState(['aaaa', 'bbbb']);
+  //const [provider, setProvider] = useState();
+  //const [signer, setSigner] = useState();
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+  const seaToken = new ethers.Contract(seaTokenAddress.Token, seaTokenContract.abi, signer);
+  
+  seaToken.on('Transfer', async (sender, to, amount) => {
+    //const e = [...events];
+    //e.push(`${amount} SEA tokens sent from ${sender} to ${to}`);
+    setEvents([...events, `${amount} SEA tokens sent from ${sender} to ${to}`]);
+  })
+
+  async function checkWalletIsConnected() {
+    if(!window.ethereum) {
+      console.log('No Metamask wallet detected');
+    } else {
+      console.log('Metamask wallet detected');
+    }
+
+    const accounts = await window.ethereum.request({method: 'eth_accounts'});
+
+    if(window.ethereum.networkVersion == '3') {
+      console.log('Network: Ropsten');
+      if(accounts.length !== 0) {
+        const account = accounts[0];
+        console.log('Account address', account, 'already connected');
+        setCurrentAccount(account);
+        setWalletStatus('Wallet Connected');
+      } else {
+        console.log('No account found');
+        setWalletStatus('Connect Wallet');
+      }
+    } else {
+      console.log('Wrong Network');
+      setWalletStatus('Wrong Network');
+    }
+  }
+
+  async function connectWalletHandler() {
+    if(!window.ethereum) {
+      alert('Please install Metamask!');
+    }
+    try {
+      if(walletStatus === 'Connect Wallet') {
+        const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+        console.log('Account address: ', accounts[0]);
+        setCurrentAccount(accounts[0]);
+        setWalletStatus('Wallet Connected');
+        
+        //await getBalance();
+      } else if(walletStatus === 'Wrong Network') {
+        try {
+          await window.ethereum.request({method: 'wallet_switchEthereumChain', params: [{chainId: '0x3'}]});
+            setWalletStatus('Connect Wallet');
+        } catch(err) {
+          if(err === 4902) {
+            try {
+              await window.ethereum.request({method: 'wallet_addEthereumChain', params: [
+                {
+                  chainId: '0x7A69',
+                  chainName: 'Local',
+                  rpcUrls: 'http://localhost:8545'
+                }]});
+            } catch(err) {
+              console.log(err);
+            }
+          }
+        }
+      }
+    } catch(err) {
+      console.log(err);
+    }
+  }
+
+  async function getBalance() {
+    if(window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      //const signer = provider.getSigner();
+      const seaToken = new ethers.Contract(seaTokenAddress.Token, seaTokenContract.abi, provider);
+      const balance = await seaToken.balanceOf(currentAccount);
+      setBalance(balance);
+      console.log(balance.toString());
+    }
+  }
+
+  async function transferTokens() {
+    console.log(amount);
+    console.log(receiver);
+    if(window.ethereum) {
+      //await window.ethereum.request({method: 'eth_requestAccounts'});
+      
+      const transaction = await seaToken.transfer(receiver, amount);
+      await transaction.wait();
+      //const e = [...events];
+      //e.push(transaction.hash);
+      //setEvents(e);
+      //console.log(events);
+    }
+  }
+
+  useEffect(() => {
+    checkWalletIsConnected();
+  }, [])
+
+  window.ethereum.on("accountsChanged", ([newAddress]) => {
+    console.log('Account changed to ', newAddress);
+    checkWalletIsConnected().wait();
+    getBalance();
+  });
+
+  return(
+    <div className='container'>
+      <h1>Sea Token Crowd Sale</h1>
+        <div className='connect-container'>
+          <button onClick={connectWalletHandler}>
+            {walletStatus === 'Wallet Connected' ? currentAccount.slice(0, 6) + '...' + currentAccount.slice(38, 42): walletStatus}
+          </button>
+          <button onClick={getBalance}>Get Balance</button>
+        </div>
+        <br />
+        <div className='transfer-container'>
+          <div>Transfer</div>
+          <input id='amountInput' onChange={e => setAmount(e.target.value)} placeholder='Amount'></input>
+          <input id='receiverInput' onChange={e => setReceiver(e.target.value)} placeholder='Receiving Address'></input>
+          <button onClick={transferTokens}>Transfer</button>
+        </div>
+        <div className='info-container'>
+          <div>SEA balance: {balance.toString()}</div>
+          <div className='event-container'>
+            <div>Events:</div>
+            <div>
+              <ul>
+            {events.map((event, i) => {
+              return <li key={i}>{event}</li>
+            })}
+            </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+  );
+}
+
+/*export function Dapp() {
+  const [userAddress, setUserAddress] = useState();
+  const [balance, setBalance] = useState();
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+  const seaToken = new ethers.Contract(seaTokenAddress.Token, seaTokenContract.abi, provider);
+  const ico = new ethers.Contract(icoAddress.ICO, icoContract.abi, provider);
+
+  console.log(seaTokenAddress.Token);
+  
+  useEffect(() => {
+    requestAccount();
+  }, [userAddress]);
+
+  async function requestAccount() {
+    const [account] = await window.ethereum.request({method: 'eth_requestAccounts'});
+    setUserAddress(account);
+  }
+
+  async function connectWallet() {
+    //const [address] = await window.ethereum.request({method: 'eth_requestAccounts'});
+    //const provider = new ethers.providers.Web3Provider(window.ethereum);
+    //const signer = provider.getSigner();
+    //const contract = new ethers.Contract(seaTokenAddress.Token, seaTokenContract.abi, signer);
+    //setUserAddress(address);
+    //setProvider(provider);
+    //setContract(contract);
+    //await getBalance();
+  }
+
+
+  window.ethereum.on("accountsChanged", () => {
+    requestAccount();
+  });
+
+  async function disconnectWallet() {
+    setUserAddress(null);
+    setBalance(null);
+  }
+
+  async function getBalance() {
+    if(typeof window.ethereum !== 'undefined') {
+      //const [account] = await window.ethereum.request({method: 'eth_requestAccounts'});
+      
+      const newBalance = await seaToken.balanceOf(userAddress);
+      console.log('Balance: ', newBalance.toString());
+      setBalance(newBalance);
+    }
+  }
+
+  return(
+    <div className='container'>
+      <button onClick={requestAccount}>Connect Wallet</button>
+      <button onClick={disconnectWallet}>Disconnect</button>
+      <div>Address: {userAddress.toString()}</div>
+      <button onClick={getBalance}>Get Balance</button>
+      <div>Account Balance: {balance.toString()}</div>
+    </div>
+  );
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*export class Dapp extends React.Component {
 	constructor(props) {
 		super(props);
 		this.initialState = {
@@ -311,4 +551,4 @@ export class Dapp extends React.Component {
 
     return false;
   }
-}
+}*/

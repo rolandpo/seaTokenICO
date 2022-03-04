@@ -53,7 +53,7 @@ contract Token {
 		require(_value <= allowance[_from][msg.sender]);
 		balanceOf[_from] = balanceOf[_from].sub(_value);
 		balanceOf[_to] = balanceOf[_to].add(_value);
-		Transfer(_from, _to, _value);
+		emit Transfer(_from, _to, _value);
 		return true;
 	}
 }

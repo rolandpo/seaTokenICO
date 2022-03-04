@@ -24,7 +24,7 @@ h2 {
 	width: 100px;
 }
 
-.bgimage {
+.container {
 	background-image: url(assets/sea.png);
 	background-size: cover;
 	overflow: hidden;
@@ -32,13 +32,55 @@ h2 {
 	height: 100vh;
 }
 
-.info {
+.connect-container {
+	background-color: #000000C0;
+	border-radius: 20px;
+	width: 300px;
+	margin: 20px auto;
+	text-align: center;
+}
+
+.transfer-container {
+	color: white;
+	padding: 10px;
+	background-color: #404080C0;
+	width: 500px;
+	margin: auto;
+	border-radius: 20px;
+	text-align: center;
+}
+
+.info-container {
 	background-color: #404040C0;
 	width: 500px;
+	height: 200px;
 	border-radius: 20px;
 	color: white;
 	padding: 5px;
 	margin: 20px auto;
+}
+
+#amountInput {
+	width: 70px;
+}
+
+button {
+	background-color: #404040C0;
+	border-radius: 5px;
+	color: white;
+	text-align: center;
+	padding: 5px;
+	margin: 5px;
+}
+
+.transfer-container button {
+	border-radius: 5px;
+}
+
+.transfer-container input {
+	border-radius: 5px;
+	border: 0;
+	margin: 5px;
 }
 
 .balance {
